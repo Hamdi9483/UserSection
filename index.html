@@ -11,165 +11,231 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    /* ========== نظام الألوان (مطابق لملف تسجيل الدخول) ========== */
-    :root {
-      --primary: #4f46e5;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --txt: #0f172a;
-      --brd: #e2e8f0;
-      --success: #22c55e;
-      --error: #ef4444;
-      --warning: #f59e0b;
-      --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
-    }
-    [data-theme="dark"] {
-      --primary: #6366f1;
-      --bg: #0f172a;
-      --card: #1e293b;
-      --txt: #f1f5f9;
-      --brd: #334155;
-      --success: #4ade80;
-      --error: #f87171;
-      --warning: #fbbf24;
-    }
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', sans-serif;
-      transition: all 0.2s ease;
+      transition: background-color 0.25s ease, border-color 0.2s ease, color 0.2s, box-shadow 0.2s;
     }
+
     body {
-      background: var(--bg);
-      color: var(--txt);
+      font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      background: var(--bg-gradient);
+      padding: 1.5rem;
     }
-    .container {
-      background: var(--card);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
+
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f5f7fc 0%, #e9eef5 100%);
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --card-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.02);
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border-light: #e2e8f0;
+      --input-bg: #ffffff;
+      --input-border: #cbd5e1;
+      --input-focus: #3b82f6;
+      --btn-primary: #2563eb;
+      --btn-primary-hover: #1d4ed8;
+      --btn-text: white;
+      --icon-color: #5b6e8c;
+      --toggle-bg: #f1f5f9;
+      --toggle-border: #cbd5e1;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    [data-theme="dark"] {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #111827 100%);
+      --card-bg: rgba(30, 35, 48, 0.96);
+      --card-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e6;
+      --text-muted: #94a3b8;
+      --border-light: #334155;
+      --input-bg: #1e293b;
+      --input-border: #475569;
+      --input-focus: #60a5fa;
+      --btn-primary: #3b82f6;
+      --btn-primary-hover: #2563eb;
+      --btn-text: #ffffff;
+      --icon-color: #94a3b8;
+      --toggle-bg: #1e293b;
+      --toggle-border: #475569;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+    }
+
+    .card {
       width: 100%;
-      max-width: 500px;
-      padding: 28px 24px 32px;
-      border: 1px solid var(--brd);
+      max-width: 520px;
+      background: var(--card-bg);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      padding: 2rem 2rem 2.2rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.2s ease;
     }
-    /* شريط التحكم (اللغة والثيمة) */
-    .ctrl-bar {
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .card-header {
       display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-bottom: 20px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
     }
-    .ctrl-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 14px;
-      border: none;
-      background: var(--bg);
-      color: var(--txt);
-      cursor: pointer;
-      font-size: 1.1rem;
+    .toggle-group {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .toggle-btn {
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      border-radius: 3rem;
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      transition: 0.2s;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
     }
-    .ctrl-btn:hover {
-      background: var(--primary);
-      color: #fff;
-      transform: translateY(-2px);
+    .toggle-btn:hover {
+      background: var(--btn-primary);
+      color: white;
+      border-color: var(--btn-primary);
+      transform: scale(0.96);
     }
-    /* العنوان */
-    .header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-    .header h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .header p {
-      color: var(--txt);
-      opacity: 0.7;
+    .lang-btn {
+      width: auto;
+      padding: 0 1rem;
+      font-weight: 600;
       font-size: 0.9rem;
-      margin-top: 6px;
+      gap: 6px;
     }
-    /* النموذج */
-    .form-group {
-      margin-bottom: 20px;
+    .lang-btn i {
+      font-size: 1rem;
+    }
+    h2 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      background: linear-gradient(120deg, var(--text-primary), var(--btn-primary));
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+      margin: 0;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
     }
     label {
       display: block;
-      margin-bottom: 8px;
+      font-size: 0.85rem;
       font-weight: 600;
-      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+    .input-icon {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 6px;
     }
-    label i {
-      color: var(--primary);
+    .input-icon i {
+      position: absolute;
+      left: 1rem;
+      color: var(--icon-color);
+      font-size: 1.1rem;
+      pointer-events: none;
     }
-    input {
+    body[dir="rtl"] .input-icon i {
+      left: auto;
+      right: 1rem;
+    }
+    .input-icon input {
       width: 100%;
-      padding: 12px 14px;
-      border: 2px solid var(--brd);
-      border-radius: 16px;
+      padding: 0.9rem 1rem 0.9rem 2.7rem;
+      border-radius: 1.2rem;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
       font-size: 1rem;
-      background: var(--bg);
-      color: var(--txt);
+      color: var(--text-primary);
       outline: none;
-      direction: rtl;
+      font-weight: 500;
     }
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+    body[dir="rtl"] .input-icon input {
+      padding: 0.9rem 2.7rem 0.9rem 1rem;
     }
-    .btn {
+    .input-icon input:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    .input-icon input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .btn-primary {
       width: 100%;
-      padding: 14px;
+      background: var(--btn-primary);
       border: none;
-      border-radius: 18px;
-      background: var(--primary);
-      color: #fff;
+      padding: 0.9rem;
+      border-radius: 2rem;
       font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
+      font-weight: 700;
+      color: var(--btn-text);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin-top: 8px;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 0.5rem;
+      box-shadow: 0 8px 18px rgba(37,99,235,0.2);
     }
-    .btn:hover {
-      opacity: 0.92;
-      transform: translateY(-1px);
+    .btn-primary:hover {
+      background: var(--btn-primary-hover);
+      transform: scale(0.98);
     }
-    .btn:disabled {
-      opacity: 0.6;
+    .btn-primary:disabled {
+      opacity: 0.7;
       cursor: not-allowed;
       transform: none;
     }
-    /* رسائل الحالة */
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--btn-primary);
+      color: var(--btn-primary);
+      box-shadow: none;
+    }
+    .btn-outline:hover {
+      background: var(--btn-primary);
+      color: white;
+    }
+
     .status {
       padding: 12px;
-      border-radius: 14px;
+      border-radius: 1.2rem;
       margin: 18px 0;
       text-align: center;
       font-weight: 500;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       display: none;
     }
     .status.success {
@@ -190,41 +256,41 @@
       color: var(--warning);
       border: 1px solid rgba(245,158,11,0.3);
     }
-    /* قسم QR */
+
     .qr-container {
       display: none;
       text-align: center;
       margin-top: 24px;
       padding: 20px;
-      background: var(--bg);
-      border-radius: 24px;
-      border: 1px solid var(--brd);
+      background: var(--input-bg);
+      border-radius: 1.5rem;
+      border: 1px solid var(--border-light);
       animation: fadeUp 0.3s ease;
     }
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .qr-container h3 {
       font-size: 1.2rem;
       margin-bottom: 12px;
-      color: var(--txt);
+      color: var(--text-primary);
     }
     .qr-container img {
       max-width: 180px;
       background: white;
       padding: 8px;
-      border-radius: 16px;
+      border-radius: 1rem;
       margin: 8px 0;
     }
     .data-preview {
-      background: var(--card);
+      background: var(--card-bg);
       padding: 12px;
-      border-radius: 16px;
+      border-radius: 1rem;
       margin: 12px 0;
       font-size: 0.85rem;
       text-align: right;
-      border: 1px solid var(--brd);
+      border: 1px solid var(--border-light);
     }
     .data-preview div {
       margin: 6px 0;
@@ -239,28 +305,17 @@
       gap: 12px;
       margin-top: 12px;
     }
-    .btn-outline {
-      background: transparent;
-      border: 2px solid var(--primary);
-      color: var(--primary);
-      box-shadow: none;
-    }
-    .btn-outline:hover {
-      background: var(--primary);
-      color: #fff;
-    }
-    /* توست */
     .toast {
       position: fixed;
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: var(--card);
-      color: var(--txt);
+      background: var(--card-bg);
+      color: var(--text-primary);
       padding: 10px 20px;
       border-radius: 40px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      border: 1px solid var(--brd);
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border-light);
       z-index: 1000;
       display: flex;
       align-items: center;
@@ -272,33 +327,44 @@
     .toast.show {
       transform: translateX(-50%) translateY(0);
     }
-    @media (max-width: 480px) {
-      .container { padding: 20px; }
+    @media (max-width: 520px) {
+      .card { padding: 1.6rem; }
+      h2 { font-size: 1.6rem; }
+      .toggle-btn { width: 38px; height: 38px; }
       .btn-group { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="ctrl-bar">
-    <button class="ctrl-btn" id="langToggle" title="Language">EN</button>
-    <button class="ctrl-btn" id="themeToggle" title="Theme">🌙</button>
-  </div>
-  <div class="header">
-    <h1>📝 تسجيل المرضى</h1>
-    <p>إضافة موعد جديد مع رمز QR</p>
+<div class="card">
+  <div class="card-header">
+    <h2 id="pageTitle">تسجيل المرضى</h2>
+    <div class="toggle-group">
+      <button class="toggle-btn" id="themeBtn" title="الوضع الليلي">
+        <i class="fas fa-moon" id="themeIcon"></i>
+      </button>
+      <button class="toggle-btn lang-btn" id="langBtn">
+        <i class="fas fa-globe"></i> <span id="langBtnText">EN</span>
+      </button>
+    </div>
   </div>
 
   <form id="patientForm">
-    <div class="form-group">
-      <label><i class="fas fa-user"></i> <span id="nameLabel">الاسم الكامل</span></label>
-      <input type="text" id="fullName" placeholder="أدخل الاسم" required>
+    <div class="input-group">
+      <label id="nameLabel">الاسم الكامل</label>
+      <div class="input-icon">
+        <i class="fas fa-user"></i>
+        <input type="text" id="fullName" placeholder="أدخل الاسم" required>
+      </div>
     </div>
-    <div class="form-group">
-      <label><i class="fas fa-phone"></i> <span id="phoneLabel">رقم الهاتف</span></label>
-      <input type="tel" id="phone" placeholder="أدخل رقم الهاتف" required>
+    <div class="input-group">
+      <label id="phoneLabel">رقم الهاتف</label>
+      <div class="input-icon">
+        <i class="fas fa-phone"></i>
+        <input type="tel" id="phone" placeholder="أدخل رقم الهاتف" required>
+      </div>
     </div>
-    <button type="submit" class="btn" id="submitBtn">
+    <button type="submit" class="btn-primary" id="submitBtn">
       <i class="fas fa-qrcode"></i> <span id="btnText">توليد رمز QR</span>
     </button>
   </form>
@@ -313,8 +379,8 @@
       <div><strong>📱</strong> <span id="previewPhone"></span></div>
     </div>
     <div class="btn-group">
-      <button class="btn" id="saveQrBtn"><i class="fas fa-download"></i> <span id="saveText">حفظ الصورة</span></button>
-      <button class="btn btn-outline" id="newPatientBtn"><i class="fas fa-plus-circle"></i> <span id="newText">تسجيل جديد</span></button>
+      <button class="btn-primary" id="saveQrBtn"><i class="fas fa-download"></i> <span id="saveText">حفظ الصورة</span></button>
+      <button class="btn-primary btn-outline" id="newPatientBtn"><i class="fas fa-plus-circle"></i> <span id="newText">تسجيل جديد</span></button>
     </div>
   </div>
 </div>
@@ -328,18 +394,19 @@
   const SUPABASE_URL = 'https://ncqvzpcqotdiwjqbwlwp.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_98lfpU1zaqG-MNxkhlvg6g_KEMPMPbS';
   let supabaseClient = null;
-  
+
   // ============================================
-  // 2. الترجمة والواجهة (مطابقة لثيمة تسجيل الدخول)
+  // 2. الترجمة والواجهة (مطابقة لتصميم الأدمن)
   // ============================================
   let currentLang = localStorage.getItem('patient_lang') || 'ar';
   let currentTheme = localStorage.getItem('patient_theme') || 'light';
-  
+
   const dict = {
     ar: {
+      title: "تسجيل المرضى",
       nameLabel: "الاسم الكامل", namePlace: "أدخل الاسم",
       phoneLabel: "رقم الهاتف", phonePlace: "أدخل رقم الهاتف",
-      btnGen: "توليد رمز QR", btnGenIcon: "fa-qrcode",
+      btnGen: "توليد رمز QR",
       qrTitle: "تم إنشاء الرمز",
       saveText: "حفظ الصورة", newText: "تسجيل جديد",
       successSave: "✅ تم حفظ المريض بنجاح!",
@@ -352,9 +419,10 @@
       errNetwork: "❌ مشكلة في الاتصال بقاعدة البيانات"
     },
     en: {
+      title: "Patient Registration",
       nameLabel: "Full Name", namePlace: "Enter name",
       phoneLabel: "Phone Number", phonePlace: "Enter phone",
-      btnGen: "Generate QR Code", btnGenIcon: "fa-qrcode",
+      btnGen: "Generate QR Code",
       qrTitle: "QR Code Ready",
       saveText: "Save Image", newText: "New Patient",
       successSave: "✅ Patient saved successfully!",
@@ -367,11 +435,13 @@
       errNetwork: "❌ Database connection error"
     }
   };
-  
+
   function applyLanguage(lang) {
     const t = dict[lang];
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.body.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    document.getElementById('pageTitle').innerText = t.title;
     document.getElementById('nameLabel').innerText = t.nameLabel;
     document.getElementById('fullName').placeholder = t.namePlace;
     document.getElementById('phoneLabel').innerText = t.phoneLabel;
@@ -380,19 +450,24 @@
     document.getElementById('qrTitle').innerText = t.qrTitle;
     document.getElementById('saveText').innerText = t.saveText;
     document.getElementById('newText').innerText = t.newText;
-    document.getElementById('langToggle').innerHTML = (lang === 'ar' ? 'EN' : '🇸🇦');
-    document.getElementById('langToggle').title = t.langName;
-    document.getElementById('themeToggle').title = t.themeName;
+    document.getElementById('langBtnText').innerText = (lang === 'ar' ? 'EN' : '🇸🇦');
+    document.getElementById('langBtn').title = t.langName;
+    document.getElementById('themeBtn').title = t.themeName;
     localStorage.setItem('patient_lang', lang);
   }
-  
+
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    const btn = document.getElementById('themeToggle');
-    btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+    const themeIcon = document.getElementById('themeIcon');
+    if (theme === 'dark') {
+      themeIcon.className = 'fas fa-sun';
+    } else {
+      themeIcon.className = 'fas fa-moon';
+    }
+    document.getElementById('themeBtn').title = dict[currentLang].themeName;
     localStorage.setItem('patient_theme', theme);
   }
-  
+
   function toggleLang() {
     currentLang = currentLang === 'ar' ? 'en' : 'ar';
     applyLanguage(currentLang);
@@ -401,13 +476,13 @@
     currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
     applyTheme(currentTheme);
   }
-  
+
   // ============================================
   // 3. أدوات مساعدة (cooldown, toast, status)
   // ============================================
-  const COOLDOWN_MIN = 1;   // دقيقة واحدة فقط (يمكن تعديلها)
+  const COOLDOWN_MIN = 1;
   let cooldownInterval = null;
-  
+
   function showToast(msg, type = 'info') {
     const toastEl = document.getElementById('toastMsg');
     const textSpan = document.getElementById('toastText');
@@ -415,7 +490,7 @@
     toastEl.className = `toast show`;
     setTimeout(() => toastEl.classList.remove('show'), 2800);
   }
-  
+
   function showStatus(msg, type) {
     const el = document.getElementById('statusMsg');
     el.className = `status ${type}`;
@@ -425,7 +500,7 @@
       if (el.style.display !== 'none') el.style.display = 'none';
     }, 4000);
   }
-  
+
   function getCooldownRemaining() {
     const last = parseInt(localStorage.getItem('patient_last_submit') || '0');
     if (!last) return 0;
@@ -433,7 +508,7 @@
     const limit = COOLDOWN_MIN * 60 * 1000;
     return Math.max(0, limit - elapsed);
   }
-  
+
   function updateCooldownUI() {
     const remaining = getCooldownRemaining();
     const btn = document.getElementById('submitBtn');
@@ -454,7 +529,7 @@
       return false;
     }
   }
-  
+
   function startCooldown() {
     localStorage.setItem('patient_last_submit', Date.now().toString());
     updateCooldownUI();
@@ -467,14 +542,13 @@
       }
     }, 1000);
   }
-  
+
   // ============================================
-  // 4. دالة الحفظ في Supabase (بدون حقلي التاريخ/الوقت من الواجهة)
-  //    نستخدم تاريخ ووقت افتراضيين (اليوم والوقت الحالي) لأن الجدول يتطلبهما NOT NULL
+  // 4. دالة الحفظ في Supabase
   // ============================================
   async function savePatientToDB(name, phone) {
     if (!supabaseClient) throw new Error('Supabase not initialized');
-    const today = new Date().toISOString().split('T')[0];   // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
     const nowTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     const { data, error } = await supabaseClient
       .from('appointments')
@@ -489,13 +563,12 @@
     if (error) throw error;
     return data[0];
   }
-  
+
   // ============================================
   // 5. معالجة النموذج وتوليد QR
   // ============================================
   async function handleSubmit(e) {
     e.preventDefault();
-    // تحقق من cooldown
     if (getCooldownRemaining() > 0) {
       const t = dict[currentLang];
       const remaining = getCooldownRemaining();
@@ -507,50 +580,42 @@
       showToast(t.cooldownMsg.replace('{time}', timeStr), 'warn');
       return;
     }
-    
+
     const name = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
     const t = dict[currentLang];
-    
+
     if (!name || !phone) {
       showStatus(t.fillFields, 'error');
       showToast(t.fillFields, 'error');
       return;
     }
-    
+
     const submitBtn = document.getElementById('submitBtn');
     const btnSpan = document.getElementById('btnText');
     submitBtn.disabled = true;
     btnSpan.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.loading}`;
-    
+
     try {
-      // حفظ في Supabase
       const saved = await savePatientToDB(name, phone);
-      // توليد QR code يتضمن المعرف والبيانات
       const qrContent = `PATIENT|ID:${saved.id}|${name}|${phone}`;
       const qrDataUrl = await QRCode.toDataURL(qrContent, {
         errorCorrectionLevel: 'M',
         width: 200,
         margin: 2
       });
-      
-      // عرض QR والبيانات
+
       document.getElementById('qrImage').src = qrDataUrl;
       document.getElementById('previewName').innerText = name;
       document.getElementById('previewPhone').innerText = phone;
       document.getElementById('qrSection').style.display = 'block';
-      
+
       showStatus(t.successSave, 'success');
       showToast(t.successSave, 'success');
-      
-      // بدء فترة التبريد
+
       startCooldown();
-      
-      // تغيير الزر إلى "تم" بشكل مؤقت ولكن سيتم إعادة ضبطه بواسطة cooldown
       btnSpan.innerText = t.btnGen;
       submitBtn.disabled = false;
-      
-      // (اختياري) إعادة تعيين النموذج بعد نجاح الحفظ؟ الأفضل تركه للمستخدم عبر "تسجيل جديد"
     } catch (err) {
       console.error(err);
       showStatus(t.errorSave + ' : ' + (err.message || ''), 'error');
@@ -559,9 +624,9 @@
       btnSpan.innerText = t.btnGen;
     }
   }
-  
+
   // ============================================
-  // 6. حفظ الصورة المحلية
+  // 6. حفظ الصورة
   // ============================================
   document.getElementById('saveQrBtn').addEventListener('click', () => {
     const img = document.getElementById('qrImage');
@@ -572,42 +637,36 @@
     link.click();
     showToast(dict[currentLang].savedImage, 'success');
   });
-  
+
   // ============================================
-  // 7. زر "تسجيل جديد" – إخفاء QR ومسح الحقول
+  // 7. زر تسجيل جديد
   // ============================================
   document.getElementById('newPatientBtn').addEventListener('click', () => {
     document.getElementById('qrSection').style.display = 'none';
     document.getElementById('patientForm').reset();
-    // إعادة تمكين الزر إذا كان معطلاً بسبب cooldown لكنه سيبقى معطلاً حتى انتهاء الوقت
-    // لكننا نحدث واجهة التبريد
     updateCooldownUI();
     document.getElementById('statusMsg').style.display = 'none';
   });
-  
+
   // ============================================
-  // 8. التهيئة عند تحميل الصفحة
+  // 8. التهيئة
   // ============================================
   window.addEventListener('DOMContentLoaded', () => {
-    // تهيئة Supabase
     if (typeof supabase !== 'undefined') {
       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log('✅ Supabase ready');
     } else {
       console.warn('⚠️ Supabase library missing');
-      showToast('⚠️ لم يتم تحميل مكتبة Supabase، تحقق من الاتصال', 'error');
+      showToast('⚠️ لم يتم تحميل مكتبة Supabase', 'error');
     }
-    
-    // تطبيق الثيمة واللغة
+
     applyTheme(currentTheme);
     applyLanguage(currentLang);
-    
-    // ربط الأزرار
-    document.getElementById('langToggle').addEventListener('click', toggleLang);
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+    document.getElementById('langBtn').addEventListener('click', toggleLang);
     document.getElementById('patientForm').addEventListener('submit', handleSubmit);
-    
-    // فحص التبريد عند البداية
+
     updateCooldownUI();
   });
 </script>
