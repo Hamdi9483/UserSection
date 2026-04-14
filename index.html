@@ -3,27 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تسجيل المرضى</title>
+    <title>تسجيل المرضى - مواعيد العيادة</title>
     
-    <!-- ✅ مكتبة توليد رموز QR -->
+    <!-- مكتبة توليد رموز QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     
-    <!-- ✅ مكتبة الأيقونات -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- ✅ مكتبة Supabase للاتصال بقاعدة البيانات -->
+    <!-- مكتبة Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- مكتبة الأيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* ========================================
            متغيرات الألوان - الوضع النهاري
            ======================================== */
         :root {
-            --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #10b981;
-            --accent: #f59e0b; --bg-main: #f8fafc; --bg-card: #ffffff;
-            --bg-input: #f1f5f9; --text-main: #1e293b; --text-muted: #64748b;
-            --border: #e2e8f0; --success: #22c55e; --error: #ef4444;
-            --warning: #f59e0b; --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
             --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
             --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -32,304 +41,668 @@
            متغيرات الألوان - الوضع الليلي
            ======================================== */
         [data-theme="dark"] {
-            --primary: #6366f1; --primary-hover: #818cf8; --secondary: #34d399;
-            --accent: #fbbf24; --bg-main: #0f172a; --bg-card: #1e293b;
-            --bg-input: #334155; --text-main: #f1f5f9; --text-muted: #94a3b8;
-            --border: #334155; --success: #4ade80; --error: #f87171;
-            --warning: #fbbf24; --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --secondary: #34d399;
+            --accent: #fbbf24;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #4ade80;
+            --error: #f87171;
+            --warning: #fbbf24;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
             --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
             --gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         }
         
-        /* ========================================
-           التنسيقات الأساسية
-           ======================================== */
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,'Noto Sans Arabic',sans-serif; transition:all 0.3s; }
-        body { background:var(--bg-main); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; color:var(--text-main); }
-        .container { background:var(--bg-card); border-radius:20px; box-shadow:var(--shadow-hover); padding:30px; width:100%; max-width:480px; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', sans-serif; 
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s; 
+        }
         
-        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding:16px 20px; background:var(--bg-input); border-radius:16px; }
-        .header h1 { font-size:1.4rem; font-weight:700; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:0; }
-        .header p { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
+        body { 
+            background: var(--bg-main); 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            color: var(--text-main); 
+        }
         
-        .form-group { margin-bottom:20px; }
-        label { display:block; margin-bottom:8px; font-weight:600; color:var(--text-main); font-size:0.9rem; display:flex; align-items:center; gap:6px; }
-        label i { color:var(--primary); }
-        .form-control { width:100%; padding:14px; border:2px solid var(--border); border-radius:12px; font-size:1rem; direction:rtl; background:var(--bg-input); color:var(--text-main); }
-        .form-control:focus { outline:none; border-color:var(--primary); background:var(--bg-card); box-shadow:0 0 0 4px rgba(79,70,229,0.15); }
+        .container { 
+            background: var(--bg-card); 
+            border-radius: 20px; 
+            box-shadow: var(--shadow-hover); 
+            padding: 30px; 
+            width: 100%; 
+            max-width: 520px; 
+        }
         
-        .btn { background:var(--gradient); color:#fff; border:none; padding:15px; font-size:1rem; border-radius:14px; width:100%; font-weight:600; cursor:pointer; margin-top:8px; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 15px rgba(79,70,229,0.3); }
-        .btn:hover { background:var(--primary-hover); transform:translateY(-1px); box-shadow:0 8px 25px rgba(79,70,229,0.35); }
-        .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-        .btn-secondary { background:var(--bg-input); color:var(--text-main); border:2px solid var(--border); }
-        .btn-secondary:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
-        .btn-success { background:var(--secondary); }
-        .btn-success:hover { background:#059669; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 24px; 
+            padding: 16px 20px; 
+            background: var(--bg-input); 
+            border-radius: 16px; 
+        }
         
-        .status { padding:14px; border-radius:12px; margin:18px 0; text-align:center; font-weight:500; font-size:0.9rem; display:none; }
-        .status.success { display:block; background:rgba(34,197,94,0.15); color:var(--success); border:2px solid rgba(34,197,94,0.3); }
-        .status.error { display:block; background:rgba(239,68,68,0.15); color:var(--error); border:2px solid rgba(239,68,68,0.3); }
-        .status.warn { display:block; background:rgba(245,158,11,0.15); color:var(--warning); border:2px solid rgba(245,158,11,0.3); }
+        .header h1 { 
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            background: var(--gradient); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin: 0; 
+        }
         
-        .qr-container { display:none; text-align:center; margin-top:24px; padding:20px; background:var(--bg-input); border-radius:16px; border:2px dashed var(--border); }
-        .qr-container h3 { color:var(--text-main); margin-bottom:12px; font-size:1.1rem; font-weight:700; }
-        #qrcode { display:inline-block; padding:20px; background:#fff; border-radius:16px; margin:15px 0; }
-        #qrcode img { max-width:200px; border-radius:12px; }
-        .data-preview { background:var(--bg-card); padding:12px; border-radius:10px; margin:12px 0; font-size:0.9rem; color:var(--text-muted); text-align:right; border:1px solid var(--border); }
-        .data-preview strong { color:var(--text-main); font-weight:700; }
-        .data-preview div { margin:6px 0; display:flex; align-items:center; gap:8px; }
-        .btn-group { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+        .header p { 
+            font-size: 0.8rem; 
+            color: var(--text-muted); 
+            margin-top: 4px; 
+        }
         
-        .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--bg-card); color:var(--text-main); padding:12px 20px; border-radius:12px; box-shadow:var(--shadow-hover); border:1px solid var(--border); z-index:1000; display:flex; align-items:center; gap:8px; font-size:0.9rem; transition:transform 0.3s ease; }
-        .toast.show { transform:translateX(-50%) translateY(0); }
-        .toast.success { border-left:4px solid var(--success); }
-        .toast.error { border-left:4px solid var(--error); }
-        .toast.warn { border-left:4px solid var(--warning); }
+        .settings { 
+            display: flex; 
+            gap: 8px; 
+        }
         
-        @media(max-width:480px) { .container{padding:20px} .btn-group{grid-template-columns:1fr} .header{flex-direction:column;gap:12px;text-align:center} }
+        .setting-btn { 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 12px; 
+            border: none; 
+            background: var(--bg-card); 
+            color: var(--text-main); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            transition: all 0.3s; 
+        }
+        
+        .setting-btn:hover { 
+            background: var(--primary); 
+            color: #fff; 
+            transform: translateY(-2px); 
+        }
+        
+        .form-group { 
+            margin-bottom: 18px; 
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: var(--text-main); 
+            font-size: 0.9rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        
+        label i { 
+            color: var(--primary); 
+        }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 12px 14px; 
+            border: 2px solid var(--border); 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            direction: rtl; 
+            background: var(--bg-input); 
+            color: var(--text-main); 
+            transition: 0.2s; 
+        }
+        
+        .form-control:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+            background: var(--bg-card); 
+            box-shadow: 0 0 0 4px rgba(79,70,229,0.15); 
+        }
+        
+        .row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn { 
+            background: var(--gradient); 
+            color: #fff; 
+            border: none; 
+            padding: 14px; 
+            font-size: 1rem; 
+            border-radius: 14px; 
+            width: 100%; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 8px; 
+            transition: 0.2s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            box-shadow: 0 4px 15px rgba(79,70,229,0.3); 
+        }
+        
+        .btn:hover { 
+            background: var(--primary-hover); 
+            transform: translateY(-1px); 
+            box-shadow: 0 8px 25px rgba(79,70,229,0.35); 
+        }
+        
+        .btn:active { 
+            transform: translateY(0); 
+        }
+        
+        .btn:disabled { 
+            opacity: 0.7; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+        
+        .btn-secondary { 
+            background: var(--bg-input); 
+            color: var(--text-main); 
+            border: 2px solid var(--border); 
+            box-shadow: none; 
+        }
+        
+        .btn-secondary:hover { 
+            background: var(--primary); 
+            color: #fff; 
+            border-color: var(--primary); 
+        }
+        
+        .btn-success { 
+            background: var(--secondary); 
+            box-shadow: 0 4px 15px rgba(16,185,129,0.3); 
+        }
+        
+        .btn-success:hover { 
+            background: #059669; 
+        }
+        
+        .status { 
+            padding: 14px; 
+            border-radius: 12px; 
+            margin: 18px 0; 
+            text-align: center; 
+            font-weight: 500; 
+            font-size: 0.9rem; 
+            display: none; 
+        }
+        
+        .status.success { 
+            display: block; 
+            background: rgba(34,197,94,0.15); 
+            color: var(--success); 
+            border: 2px solid rgba(34,197,94,0.3); 
+        }
+        
+        .status.error { 
+            display: block; 
+            background: rgba(239,68,68,0.15); 
+            color: var(--error); 
+            border: 2px solid rgba(239,68,68,0.3); 
+        }
+        
+        .status.warn { 
+            display: block; 
+            background: rgba(245,158,11,0.15); 
+            color: var(--warning); 
+            border: 2px solid rgba(245,158,11,0.3); 
+        }
+        
+        .qr-container { 
+            display: none; 
+            text-align: center; 
+            margin-top: 24px; 
+            padding: 20px; 
+            background: var(--bg-input); 
+            border-radius: 16px; 
+            border: 2px dashed var(--border); 
+            animation: slideUp 0.3s ease; 
+        }
+        
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .qr-container h3 { 
+            color: var(--text-main); 
+            margin-bottom: 12px; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+        }
+        
+        .qr-container img { 
+            max-width: 200px; 
+            height: auto; 
+            border-radius: 12px; 
+            margin: 10px 0; 
+            background: #fff; 
+            padding: 10px; 
+        }
+        
+        .data-preview { 
+            background: var(--bg-card); 
+            padding: 12px; 
+            border-radius: 10px; 
+            margin: 12px 0; 
+            font-size: 0.85rem; 
+            color: var(--text-muted); 
+            text-align: right; 
+            border: 1px solid var(--border); 
+        }
+        
+        .data-preview strong { 
+            color: var(--text-main); 
+            font-weight: 700; 
+        }
+        
+        .data-preview div { 
+            margin: 6px 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            flex-wrap: wrap;
+        }
+        
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-top: 12px; 
+        }
+        
+        .toast { 
+            position: fixed; 
+            bottom: 24px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(100px); 
+            background: var(--bg-card); 
+            color: var(--text-main); 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            box-shadow: var(--shadow-hover); 
+            border: 1px solid var(--border); 
+            z-index: 1000; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 0.9rem; 
+            transition: transform 0.3s ease; 
+            min-width: 220px; 
+            justify-content: center; 
+        }
+        
+        .toast.show { 
+            transform: translateX(-50%) translateY(0); 
+        }
+        
+        .toast.success { border-right: 4px solid var(--success); }
+        .toast.error { border-right: 4px solid var(--error); }
+        .toast.warn { border-right: 4px solid var(--warning); }
+        
+        @media(max-width: 520px) {
+            .container { padding: 20px; }
+            .btn-group { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 12px; text-align: center; }
+            .settings { width: 100%; justify-content: center; }
+            .row-2col { grid-template-columns: 1fr; gap: 10px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>📝 تسجيل الزوار</h1>
-                <p>قم بإنشاء رموز QR للزوار بسرعة</p>
+                <h1>📋 تسجيل المواعيد</h1>
+                <p>إدارة مواعيد المرضى مع رمز QR</p>
+            </div>
+            <div class="settings">
+                <button class="setting-btn" id="langToggle" title="تبديل اللغة"><i class="fas fa-globe"></i></button>
+                <button class="setting-btn" id="themeToggle" title="تبديل السمة"><i class="fas fa-moon"></i></button>
             </div>
         </div>
         
         <form id="visitorForm">
             <div class="form-group">
-                <label for="name"><i class="fas fa-user"></i> الاسم الكامل</label>
-                <input type="text" class="form-control" id="name" placeholder="أدخل الاسم" required>
+                <label for="name"><i class="fas fa-user"></i> اسم المريض</label>
+                <input type="text" class="form-control" id="name" placeholder="أدخل الاسم الكامل" required>
             </div>
             <div class="form-group">
                 <label for="phone"><i class="fas fa-phone"></i> رقم الهاتف</label>
                 <input type="tel" class="form-control" id="phone" placeholder="أدخل رقم الهاتف" required>
             </div>
+            <div class="row-2col">
+                <div class="form-group">
+                    <label for="app_date"><i class="fas fa-calendar-alt"></i> تاريخ الموعد</label>
+                    <input type="date" class="form-control" id="app_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="app_time"><i class="fas fa-clock"></i> وقت الموعد</label>
+                    <input type="time" class="form-control" id="app_time" required>
+                </div>
+            </div>
             <button type="submit" class="btn" id="submitBtn">
-                <i class="fas fa-bolt"></i> <span id="btnText">توليد رمز الاستجابة</span>
+                <i class="fas fa-save"></i> حفظ وتوليد QR
             </button>
         </form>
-        
-        <!-- شريط التبريد -->
-        <div class="cooldown-bar" id="cooldownBar" style="height:4px;background:var(--border);border-radius:2px;margin:12px 0;overflow:hidden;display:none">
-            <div class="cooldown-fill" id="cooldownFill" style="height:100%;background:var(--warning);transition:width 1s linear"></div>
-        </div>
-        <div class="cooldown-text" id="cooldownText" style="font-size:0.85rem;color:var(--warning);text-align:center;margin-top:4px;display:none">
-            ⏱️ انتظر <span id="cooldownTime">60</span> ثانية للتسجيل التالي
-        </div>
         
         <div id="status" class="status"></div>
         
         <div id="qrResult" class="qr-container">
-            <h3 id="qrTitle">✅ الرمز جاهز</h3>
-            <div id="qrcode"></div>
+            <h3>✅ تم تسجيل الموعد</h3>
+            <img id="qrImage" src="" alt="QR Code">
             <div class="data-preview">
                 <div><strong>👤</strong> <span id="prev-name"></span></div>
                 <div><strong>📱</strong> <span id="prev-phone"></span></div>
+                <div><strong>📅</strong> <span id="prev-date"></span> - <span id="prev-time"></span></div>
             </div>
             <div class="btn-group">
-                <button class="btn btn-success" id="saveBtn"><i class="fas fa-download"></i> <span id="saveText">حفظ</span></button>
-                <button class="btn btn-secondary" id="closeBtn"><i class="fas fa-redo"></i> <span id="newText">جديد</span></button>
+                <button class="btn btn-success" id="saveBtn"><i class="fas fa-download"></i> حفظ QR</button>
+                <button class="btn btn-secondary" id="closeBtn"><i class="fas fa-plus-circle"></i> تسجيل جديد</button>
             </div>
         </div>
     </div>
 
-    <div class="toast" id="toast"><span id="toastMsg">تم التغيير</span></div>
+    <div class="toast" id="toast"><i class="fas fa-info-circle"></i><span id="toastMsg"></span></div>
 
     <script>
         // ========================================
-        // 🔑 إعدادات الاتصال بـ Supabase (مفاتيحك)
+        // إعدادات Supabase
         // ========================================
         const SUPABASE_URL = 'https://ncqvzpcqotdiwjqbwlwp.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_98lfpU1zaqG-MNxkhlvg6g_KEMPMPbS';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // ========================================
-        // ⚙️ إعدادات التطبيق
-        // ========================================
-        const COOLDOWN_SECONDS = 60; // فترة التبريد: دقيقة واحدة (بدلاً من 3 دقائق)
-        let lastSubmission = 0;
-        let cooldownInterval = null;
-        let submitted = false;
 
         // ========================================
-        // 🔍 عناصر الواجهة
+        // الترجمات
         // ========================================
+        const translations = {
+            ar: {
+                title: "📋 تسجيل المواعيد", subtitle: "إدارة مواعيد المرضى مع رمز QR",
+                lblName: "<i class='fas fa-user'></i> اسم المريض", phName: "أدخل الاسم الكامل",
+                lblPhone: "<i class='fas fa-phone'></i> رقم الهاتف", phPhone: "أدخل رقم الهاتف",
+                lblDate: "<i class='fas fa-calendar-alt'></i> تاريخ الموعد", lblTime: "<i class='fas fa-clock'></i> وقت الموعد",
+                btnGen: "حفظ وتوليد QR", btnNew: "تسجيل جديد", btnSave: "حفظ QR",
+                qrReady: "✅ تم تسجيل الموعد", ok: "✅ تم حفظ الموعد في قاعدة البيانات!", 
+                err: "❌ فشل الحفظ أو التوليد", fill: "يرجى ملء جميع الحقول", saved: "✅ تم حفظ الصورة!",
+                cooldown: "⏱️ يرجى الانتظار {time} قبل تسجيل موعد آخر", langName: "العربية"
+            },
+            en: {
+                title: "📋 Appointment Registration", subtitle: "Manage patient appointments with QR",
+                lblName: "<i class='fas fa-user'></i> Patient Name", phName: "Full name",
+                lblPhone: "<i class='fas fa-phone'></i> Phone", phPhone: "Phone number",
+                lblDate: "<i class='fas fa-calendar-alt'></i> Date", lblTime: "<i class='fas fa-clock'></i> Time",
+                btnGen: "Save & Generate QR", btnNew: "New Registration", btnSave: "Save QR",
+                qrReady: "✅ Appointment Saved", ok: "✅ Appointment saved to database!", 
+                err: "❌ Save or generation failed", fill: "Please fill all fields", saved: "✅ Image saved!",
+                cooldown: "⏱️ Please wait {time} before next appointment", langName: "English"
+            }
+        };
+
+        // ========================================
+        // المتغيرات العامة
+        // ========================================
+        let currentLang = localStorage.getItem('qr_lang') || 'ar';
+        let currentTheme = localStorage.getItem('qr_theme') || 'light';
+        let cooldownTimer = null;
+        const COOLDOWN_MINUTES = 1;  // دقيقة واحدة فقط للتجربة، يمكن زيادتها
+
         const $ = id => document.getElementById(id);
         const form = $('visitorForm');
 
         // ========================================
-        // 🔄 دالة بدء عداد التبريد
+        // السمة
         // ========================================
-        function startCooldown() {
-            lastSubmission = Date.now();
-            const bar = $('cooldownBar');
-            const text = $('cooldownText');
-            const fill = $('cooldownFill');
-            const timeEl = $('cooldownTime');
-            const btn = $('submitBtn');
-            
-            bar.style.display = 'block';
-            text.style.display = 'block';
-            btn.disabled = true;
-            
-            let remaining = COOLDOWN_SECONDS;
-            timeEl.textContent = remaining;
-            fill.style.width = '100%';
-            
-            if (cooldownInterval) clearInterval(cooldownInterval);
-            
-            cooldownInterval = setInterval(() => {
-                remaining--;
-                timeEl.textContent = remaining;
-                fill.style.width = (remaining / COOLDOWN_SECONDS * 100) + '%';
-                
-                if (remaining <= 0) {
-                    clearInterval(cooldownInterval);
-                    bar.style.display = 'none';
-                    text.style.display = 'none';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-bolt"></i> <span id="btnText">توليد رمز الاستجابة</span>';
-                }
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            $('themeToggle').innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            localStorage.setItem('qr_theme', theme);
+        }
+        function toggleTheme() { currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(currentTheme); }
+
+        // ========================================
+        // اللغة
+        // ========================================
+        function applyLanguage(lang) {
+            const t = translations[lang];
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.querySelector('.header h1').textContent = t.title;
+            document.querySelector('.header p').textContent = t.subtitle;
+            document.querySelector('label[for="name"]').innerHTML = t.lblName;
+            $('name').placeholder = t.phName;
+            document.querySelector('label[for="phone"]').innerHTML = t.lblPhone;
+            $('phone').placeholder = t.phPhone;
+            document.querySelector('label[for="app_date"]').innerHTML = t.lblDate;
+            document.querySelector('label[for="app_time"]').innerHTML = t.lblTime;
+            $('submitBtn').innerHTML = `<i class="fas fa-save"></i> ${t.btnGen}`;
+            $('closeBtn').innerHTML = `<i class="fas fa-plus-circle"></i> ${t.btnNew}`;
+            $('saveBtn').innerHTML = `<i class="fas fa-download"></i> ${t.btnSave}`;
+            $('qrResult').querySelector('h3').textContent = t.qrReady;
+            localStorage.setItem('qr_lang', lang);
+        }
+        function toggleLanguage() { currentLang = currentLang === 'ar' ? 'en' : 'ar'; applyLanguage(currentLang); }
+
+        // ========================================
+        // الإشعارات
+        // ========================================
+        function showToast(msg, type = 'info') {
+            $('toastMsg').textContent = msg;
+            const toast = $('toast');
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        function showStatus(msg, type) {
+            const el = $('status');
+            el.className = `status ${type}`;
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => { if($('status').style.display !== 'none') $('status').style.display = 'none'; }, 4000);
+        }
+
+        // ========================================
+        // نظام التبريد
+        // ========================================
+        function getCooldownStatus() {
+            const lastTime = parseInt(localStorage.getItem('qr_last_submission') || '0');
+            if (!lastTime) return { active: false };
+            const now = Date.now();
+            const cooldownLimit = COOLDOWN_MINUTES * 60 * 1000;
+            const elapsed = now - lastTime;
+            if (elapsed < cooldownLimit) {
+                const remaining = cooldownLimit - elapsed;
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                return { active: true, minutes, seconds, remaining };
+            }
+            return { active: false };
+        }
+        function saveSubmissionTime() { localStorage.setItem('qr_last_submission', Date.now().toString()); }
+        function updateCooldownUI() {
+            const status = getCooldownStatus();
+            const t = translations[currentLang];
+            if (status.active) {
+                $('submitBtn').disabled = true;
+                const timeText = `${status.minutes}:${status.seconds.toString().padStart(2, '0')}`;
+                $('submitBtn').innerHTML = `<i class="fas fa-clock"></i> ${t.cooldown.replace('{time}', timeText)}`;
+                return true;
+            } else {
+                $('submitBtn').disabled = false;
+                $('submitBtn').innerHTML = `<i class="fas fa-save"></i> ${t.btnGen}`;
+                return false;
+            }
+        }
+        function startCooldownMonitor() {
+            updateCooldownUI();
+            if (cooldownTimer) clearInterval(cooldownTimer);
+            cooldownTimer = setInterval(() => {
+                const stillActive = updateCooldownUI();
+                if (!stillActive) { clearInterval(cooldownTimer); cooldownTimer = null; }
             }, 1000);
         }
 
         // ========================================
-        // 🚀 معالجة النموذج وإرسال البيانات لـ Supabase
+        // دالة إدخال البيانات إلى Supabase
+        // ========================================
+        async function saveToSupabase(patientName, phone, appointmentDate, appointmentTime) {
+            const { data, error } = await supabase
+                .from('appointments')
+                .insert([
+                    {
+                        patient_name: patientName,
+                        phone: phone,
+                        appointment_date: appointmentDate,
+                        appointment_time: appointmentTime,
+                        status: 'pending'
+                    }
+                ])
+                .select();
+            
+            if (error) throw new Error(error.message);
+            return data[0];
+        }
+
+        // ========================================
+        // معالجة النموذج (حفظ + QR)
         // ========================================
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // التحقق من فترة التبريد
-            if (Date.now() - lastSubmission < COOLDOWN_SECONDS * 1000) {
-                showStatus('⏱️ يرجى الانتظار قبل التسجيل التالي', 'warn');
+            // التحقق من التبريد
+            if (getCooldownStatus().active) {
+                const st = getCooldownStatus();
+                const t = translations[currentLang];
+                const timeText = `${st.minutes}:${st.seconds.toString().padStart(2, '0')}`;
+                showStatus(t.cooldown.replace('{time}', timeText), 'warn');
+                showToast(t.cooldown.replace('{time}', timeText), 'warn');
                 return;
             }
             
             const name = $('name').value.trim();
             const phone = $('phone').value.trim();
+            const appDate = $('app_date').value;
+            const appTime = $('app_time').value;
             
-            if (!name || !phone) { 
-                showStatus('يرجى ملء جميع الحقول', 'error'); 
-                return; 
+            if (!name || !phone || !appDate || !appTime) {
+                showStatus(translations[currentLang].fill, 'error');
+                showToast(translations[currentLang].fill, 'error');
+                return;
             }
             
-            if (submitted) { 
-                resetForm(); 
-                return; 
-            }
-            
-            const btn = $('submitBtn');
-            const originalBtn = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+            // تعطيل الزر وعرض تحميل
+            $('submitBtn').disabled = true;
+            $('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            $('status').style.display = 'none';
             
             try {
-                // ✅ توليد نص رمز الاستجابة
-                const qrData = `ZAYIR|${name}|${phone}`;
+                // 1. حفظ في Supabase
+                const savedRecord = await saveToSupabase(name, phone, appDate, appTime);
+                console.log('تم الحفظ:', savedRecord);
                 
-                // ✅ توليد صورة الـ QR
-                $('qrcode').innerHTML = '';
-                new QRCode($('qrcode'), {
-                    text: qrData,
+                // 2. توليد QR code يحتوي على معرف الموعد والبيانات الأساسية
+                const qrData = `APPOINTMENT|ID:${savedRecord.id}|${name}|${phone}|${appDate}|${appTime}`;
+                const qrUrl = await QRCode.toDataURL(qrData, {
+                    errorCorrectionLevel: 'M',
                     width: 200,
-                    height: 200,
-                    colorDark: '#000000',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.M
+                    margin: 2
                 });
                 
-                // ✅ حفظ البيانات في جدول appointments بـ Supabase
-                // نستخدم التاريخ والوقت الحاليين كقيمة افتراضية للموعد
-                const today = new Date().toISOString().split('T')[0];
-                const now = new Date().toTimeString().split(' ')[0].substring(0,5);
+                // 3. حفظ وقت التبريد
+                saveSubmissionTime();
+                startCooldownMonitor();
                 
-                const { error } = await supabase
-                    .from('appointments')
-                    .insert([{
-                        patient_name: name,
-                        phone: phone.replace(/\D/g, ''),
-                        appointment_date: today,
-                        appointment_time: now,
-                        status: 'pending'
-                        // created_at يُضاف تلقائياً بواسطة القاعدة
-                    }]);
+                // 4. عرض النجاح
+                showStatus(translations[currentLang].ok, 'success');
+                showToast(translations[currentLang].ok, 'success');
                 
-                if (error) throw error;
-                
-                // ✅ عرض النتيجة
+                // 5. عرض رمز QR والبيانات
+                $('qrImage').src = qrUrl;
                 $('prev-name').textContent = name;
                 $('prev-phone').textContent = phone;
+                $('prev-date').textContent = appDate;
+                $('prev-time').textContent = appTime;
                 $('qrResult').style.display = 'block';
-                showStatus('✅ تم التسجيل بنجاح في قاعدة البيانات', 'success');
                 
-                // ✅ بدء عداد التبريد لمدة دقيقة
-                startCooldown();
+                // تغيير الزر إلى "تسجيل جديد"
+                $('submitBtn').innerHTML = `<i class="fas fa-plus-circle"></i> ${translations[currentLang].btnNew}`;
+                $('submitBtn').disabled = false;
                 
-                btn.innerHTML = '<i class="fas fa-redo"></i> <span id="newText">زائر جديد</span>';
-                submitted = true;
+                // مسح الحقول (اختياري)
+                // form.reset();
+                // نتركها كما هي ولكن المستخدم يمكنه الضغط على "تسجيل جديد" لمسح الحقول
                 
-            } catch (err) {
-                console.error('Registration Error:', err);
-                showStatus('❌ فشل التسجيل: ' + err.message, 'error');
-                btn.disabled = false;
-                btn.innerHTML = originalBtn;
+            } catch (error) {
+                console.error('خطأ:', error);
+                showStatus(translations[currentLang].err + ': ' + error.message, 'error');
+                showToast(translations[currentLang].err, 'error');
+                $('submitBtn').disabled = false;
+                $('submitBtn').innerHTML = `<i class="fas fa-save"></i> ${translations[currentLang].btnGen}`;
             }
         });
-
-        // ========================================
-        // 💾 حفظ صورة الـ QR
-        // ========================================
-        $('saveBtn').addEventListener('click', function() {
-            const canvas = $('qrcode').querySelector('canvas');
-            if (!canvas) { 
-                showStatus('لا يوجد رمز لحفظه', 'error'); 
-                return; 
-            }
-            const link = document.createElement('a');
-            link.download = 'Visitor_' + Date.now() + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            showStatus('✅ تم حفظ الرمز', 'success');
-        });
-
-        // ========================================
-        // 🔄 زائر جديد
-        // ========================================
-        $('closeBtn').addEventListener('click', resetForm);
         
-        function resetForm() {
+        // حفظ صورة QR
+        $('saveBtn').addEventListener('click', function() {
+            if (!$('qrImage').src) { showStatus('لا يوجد رمز للحفظ', 'error'); return; }
+            const link = document.createElement('a');
+            link.download = `Appointment_${Date.now()}.png`;
+            link.href = $('qrImage').src;
+            link.click();
+            showToast(translations[currentLang].saved, 'success');
+        });
+        
+        // إعادة تعيين النموذج لتسجيل جديد
+        $('closeBtn').addEventListener('click', function() {
             $('qrResult').style.display = 'none';
             form.reset();
-            $('qrcode').innerHTML = '';
-            $('status').style.display = 'none';
+            // تعيين تاريخ اليوم بشكل افتراضي ليسهل على المستخدم
+            const today = new Date().toISOString().split('T')[0];
+            if(!$('app_date').value) $('app_date').value = today;
+            $('submitBtn').innerHTML = `<i class="fas fa-save"></i> ${translations[currentLang].btnGen}`;
             $('submitBtn').disabled = false;
-            $('submitBtn').innerHTML = '<i class="fas fa-bolt"></i> <span id="btnText">توليد رمز الاستجابة</span>';
-            submitted = false;
-        }
-
+            $('status').style.display = 'none';
+        });
+        
         // ========================================
-        // 📊 عرض رسائل الحالة
-        // ========================================
-        function showStatus(msg, type) {
-            const s = $('status');
-            s.className = `status ${type}`;
-            s.textContent = msg;
-            s.style.display = 'block';
-            if (type !== 'warn') {
-                setTimeout(() => { 
-                    if (s.className.includes(type)) s.style.display = 'none'; 
-                }, 4000);
-            }
-        }
-
-        // ========================================
-        // 🎬 التهيئة عند التحميل
+        // تهيئة التطبيق
         // ========================================
         window.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ Visitor Registration App Connected to Supabase');
+            applyTheme(currentTheme);
+            applyLanguage(currentLang);
+            $('themeToggle').onclick = toggleTheme;
+            $('langToggle').onclick = toggleLanguage;
+            
+            // تعيين تاريخ اليوم كقيمة افتراضية لحقل التاريخ
+            const today = new Date().toISOString().split('T')[0];
+            $('app_date').value = today;
+            // تعيين وقت افتراضي (الساعة الحالية مقربة)
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2,'0');
+            const minutes = now.getMinutes().toString().padStart(2,'0');
+            $('app_time').value = `${hours}:${minutes}`;
+            
+            startCooldownMonitor();
         });
     </script>
 </body>
