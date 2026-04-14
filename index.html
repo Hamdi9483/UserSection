@@ -3,13 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تسجيل الزوار</title>
+    <title>تسجيل المرضى</title>
+    
     <!-- ✅ مكتبة توليد رموز QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    
     <!-- ✅ مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- ✅ مكتبة Supabase للاتصال بقاعدة البيانات -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* 🎨 متغيرات الألوان - الوضع النهاري */
+        /* ========================================
+           متغيرات الألوان - الوضع النهاري
+           ======================================== */
         :root {
             --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #10b981;
             --accent: #f59e0b; --bg-main: #f8fafc; --bg-card: #ffffff;
@@ -19,7 +27,10 @@
             --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
             --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        /* 🌙 متغيرات الألوان - الوضع الليلي */
+        
+        /* ========================================
+           متغيرات الألوان - الوضع الليلي
+           ======================================== */
         [data-theme="dark"] {
             --primary: #6366f1; --primary-hover: #818cf8; --secondary: #34d399;
             --accent: #fbbf24; --bg-main: #0f172a; --bg-card: #1e293b;
@@ -29,16 +40,20 @@
             --shadow-hover: 0 8px 30px rgba(0,0,0,0.4);
             --gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         }
+        
+        /* ========================================
+           التنسيقات الأساسية
+           ======================================== */
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,'Noto Sans Arabic',sans-serif; transition:all 0.3s; }
         body { background:var(--bg-main); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; color:var(--text-main); }
-        .container { background:var(--bg-card); border-radius:20px; box-shadow:var(--shadow-hover); padding:30px; width:100%; max-width:480px; border:1px solid var(--border); }
+        .container { background:var(--bg-card); border-radius:20px; box-shadow:var(--shadow-hover); padding:30px; width:100%; max-width:480px; }
         
-        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding:16px 20px; background:var(--bg-input); border-radius:16px; border:1px solid var(--border); }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding:16px 20px; background:var(--bg-input); border-radius:16px; }
         .header h1 { font-size:1.4rem; font-weight:700; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:0; }
         .header p { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
         
         .form-group { margin-bottom:20px; }
-        label { display:block; margin-bottom:8px; font-weight:600; color:var(--text-main); font-size:0.95rem; display:flex; align-items:center; gap:6px; }
+        label { display:block; margin-bottom:8px; font-weight:600; color:var(--text-main); font-size:0.9rem; display:flex; align-items:center; gap:6px; }
         label i { color:var(--primary); }
         .form-control { width:100%; padding:14px; border:2px solid var(--border); border-radius:12px; font-size:1rem; direction:rtl; background:var(--bg-input); color:var(--text-main); }
         .form-control:focus { outline:none; border-color:var(--primary); background:var(--bg-card); box-shadow:0 0 0 4px rgba(79,70,229,0.15); }
@@ -65,10 +80,11 @@
         .data-preview div { margin:6px 0; display:flex; align-items:center; gap:8px; }
         .btn-group { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
         
-        /* عداد التبريد */
-        .cooldown-bar { height:4px; background:var(--border); border-radius:2px; margin:12px 0; overflow:hidden; display:none; }
-        .cooldown-fill { height:100%; background:var(--warning); transition:width 1s linear; }
-        .cooldown-text { font-size:0.85rem; color:var(--warning); text-align:center; margin-top:4px; display:none; }
+        .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--bg-card); color:var(--text-main); padding:12px 20px; border-radius:12px; box-shadow:var(--shadow-hover); border:1px solid var(--border); z-index:1000; display:flex; align-items:center; gap:8px; font-size:0.9rem; transition:transform 0.3s ease; }
+        .toast.show { transform:translateX(-50%) translateY(0); }
+        .toast.success { border-left:4px solid var(--success); }
+        .toast.error { border-left:4px solid var(--error); }
+        .toast.warn { border-left:4px solid var(--warning); }
         
         @media(max-width:480px) { .container{padding:20px} .btn-group{grid-template-columns:1fr} .header{flex-direction:column;gap:12px;text-align:center} }
     </style>
@@ -97,8 +113,12 @@
         </form>
         
         <!-- شريط التبريد -->
-        <div class="cooldown-bar" id="cooldownBar"><div class="cooldown-fill" id="cooldownFill"></div></div>
-        <div class="cooldown-text" id="cooldownText">⏱️ انتظر <span id="cooldownTime">60</span> ثانية للتسجيل التالي</div>
+        <div class="cooldown-bar" id="cooldownBar" style="height:4px;background:var(--border);border-radius:2px;margin:12px 0;overflow:hidden;display:none">
+            <div class="cooldown-fill" id="cooldownFill" style="height:100%;background:var(--warning);transition:width 1s linear"></div>
+        </div>
+        <div class="cooldown-text" id="cooldownText" style="font-size:0.85rem;color:var(--warning);text-align:center;margin-top:4px;display:none">
+            ⏱️ انتظر <span id="cooldownTime">60</span> ثانية للتسجيل التالي
+        </div>
         
         <div id="status" class="status"></div>
         
@@ -116,9 +136,8 @@
         </div>
     </div>
 
-    <!-- ✅ مكتبة Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <div class="toast" id="toast"><span id="toastMsg">تم التغيير</span></div>
+
     <script>
         // ========================================
         // 🔑 إعدادات الاتصال بـ Supabase (مفاتيحك)
@@ -130,7 +149,7 @@
         // ========================================
         // ⚙️ إعدادات التطبيق
         // ========================================
-        const COOLDOWN_SECONDS = 60; // فترة التبريد: دقيقة واحدة
+        const COOLDOWN_SECONDS = 60; // فترة التبريد: دقيقة واحدة (بدلاً من 3 دقائق)
         let lastSubmission = 0;
         let cooldownInterval = null;
         let submitted = false;
@@ -223,8 +242,7 @@
                 });
                 
                 // ✅ حفظ البيانات في جدول appointments بـ Supabase
-                // ملاحظة: نستخدم appointment_date و appointment_time بنفس قيمة اليوم والوقت الحالي
-                // يمكنك تعديلها لاحقاً لإدخال موعد مستقبلي إذا أردت
+                // نستخدم التاريخ والوقت الحاليين كقيمة افتراضية للموعد
                 const today = new Date().toISOString().split('T')[0];
                 const now = new Date().toTimeString().split(' ')[0].substring(0,5);
                 
@@ -235,8 +253,8 @@
                         phone: phone.replace(/\D/g, ''),
                         appointment_date: today,
                         appointment_time: now,
-                        status: 'pending',
-                        created_at: new Date().toISOString()
+                        status: 'pending'
+                        // created_at يُضاف تلقائياً بواسطة القاعدة
                     }]);
                 
                 if (error) throw error;
