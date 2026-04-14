@@ -112,25 +112,27 @@
       justify-content: center;
       cursor: pointer;
       font-size: 1.3rem;
-      color: var(--text-secondary);
+      color: white;  /* الأيقونات بيضاء دائماً */
       transition: all 0.2s;
+    }
+    .toggle-btn i {
+      color: white;
     }
     .toggle-btn:hover {
       background: var(--btn-primary);
-      color: white;
       border-color: var(--btn-primary);
       transform: scale(0.96);
     }
+    /* إزالة أي نص إضافي من زر اللغة */
     .lang-btn {
-      width: auto;
-      padding: 0 1rem;
-      font-weight: 600;
-      font-size: 0.9rem;
-      gap: 6px;
+      width: 44px;   /* نفس عرض الأزرار الأخرى */
+      padding: 0;
+      gap: 0;
     }
-    .lang-btn i {
-      font-size: 1rem;
+    .lang-btn span {
+      display: none;  /* إخفاء النص "EN" */
     }
+
     h2 {
       font-size: 1.9rem;
       font-weight: 700;
@@ -343,8 +345,8 @@
       <button class="toggle-btn" id="themeBtn" title="الوضع الليلي">
         <i class="fas fa-moon" id="themeIcon"></i>
       </button>
-      <button class="toggle-btn lang-btn" id="langBtn">
-        <i class="fas fa-globe"></i> <span id="langBtnText">EN</span>
+      <button class="toggle-btn lang-btn" id="langBtn" title="تبديل اللغة">
+        <i class="fas fa-globe"></i> <span id="langBtnText"></span>
       </button>
     </div>
   </div>
@@ -452,7 +454,8 @@
     document.getElementById('qrTitle').innerText = t.qrTitle;
     document.getElementById('saveText').innerText = t.saveText;
     document.getElementById('newText').innerText = t.newText;
-    document.getElementById('langBtnText').innerText = (lang === 'ar' ? 'EN' : '🇸🇦');
+    // إخفاء أي نص داخل زر اللغة (يبقى الأيقونة فقط)
+    document.getElementById('langBtnText').innerText = '';
     document.getElementById('langBtn').title = t.langName;
     document.getElementById('themeBtn').title = t.themeName;
     localStorage.setItem('patient_lang', lang);
@@ -551,14 +554,12 @@
   async function savePatientToDB(name, phone) {
     if (!supabaseClient) throw new Error('Supabase not initialized');
     
-    // إدراج فقط الأعمدة الموجودة والضرورية (بدون appointment_date/time)
     const { data, error } = await supabaseClient
       .from('appointments')
       .insert([{
         patient_name: name,
         phone: phone,
         status: 'pending'
-        // لم يتم إرسال appointment_date أو appointment_time
       }])
       .select();
     
@@ -600,7 +601,6 @@
 
     try {
       const saved = await savePatientToDB(name, phone);
-      // توليد QR يتضمن المعرف والاسم والهاتف
       const qrContent = `PATIENT|ID:${saved.id}|${name}|${phone}`;
       const qrDataUrl = await QRCode.toDataURL(qrContent, {
         errorCorrectionLevel: 'M',
@@ -621,7 +621,6 @@
       submitBtn.disabled = false;
     } catch (err) {
       console.error(err);
-      // رسالة خطأ مخصصة إذا كان الخطأ بسبب عدم وجود أعمدة التاريخ/الوقت
       let errorMsg = t.errorSave;
       if (err.message && (err.message.includes('appointment_date') || err.message.includes('appointment_time'))) {
         errorMsg = t.tableError;
