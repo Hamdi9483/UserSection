@@ -396,7 +396,7 @@
   let supabaseClient = null;
 
   // ============================================
-  // 2. الترجمة والواجهة (مطابقة لتصميم الأدمن)
+  // 2. الترجمة والواجهة
   // ============================================
   let currentLang = localStorage.getItem('patient_lang') || 'ar';
   let currentTheme = localStorage.getItem('patient_theme') || 'light';
@@ -416,7 +416,8 @@
       savedImage: "✅ تم حفظ الصورة",
       langName: "English", themeName: "الوضع الليلي",
       loading: "جاري الحفظ...",
-      errNetwork: "❌ مشكلة في الاتصال بقاعدة البيانات"
+      errNetwork: "❌ مشكلة في الاتصال بقاعدة البيانات",
+      tableError: "⚠️ خطأ في قاعدة البيانات: تأكد من تعديل الجدول (إزالة NOT NULL من appointment_date و appointment_time)"
     },
     en: {
       title: "Patient Registration",
@@ -432,7 +433,8 @@
       savedImage: "✅ Image saved",
       langName: "العربية", themeName: "Dark Mode",
       loading: "Saving...",
-      errNetwork: "❌ Database connection error"
+      errNetwork: "❌ Database connection error",
+      tableError: "⚠️ Database error: Please alter table appointments (remove NOT NULL from appointment_date and appointment_time)"
     }
   };
 
@@ -478,7 +480,7 @@
   }
 
   // ============================================
-  // 3. أدوات مساعدة (cooldown, toast, status)
+  // 3. أدوات مساعدة
   // ============================================
   const COOLDOWN_MIN = 1;
   let cooldownInterval = null;
@@ -544,22 +546,22 @@
   }
 
   // ============================================
-  // 4. دالة الحفظ في Supabase
+  // 4. دالة الحفظ في Supabase (بدون تاريخ أو وقت)
   // ============================================
   async function savePatientToDB(name, phone) {
     if (!supabaseClient) throw new Error('Supabase not initialized');
-    const today = new Date().toISOString().split('T')[0];
-    const nowTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    
+    // إدراج فقط الأعمدة الموجودة والضرورية (بدون appointment_date/time)
     const { data, error } = await supabaseClient
       .from('appointments')
       .insert([{
         patient_name: name,
         phone: phone,
-        appointment_date: today,
-        appointment_time: nowTime,
         status: 'pending'
+        // لم يتم إرسال appointment_date أو appointment_time
       }])
       .select();
+    
     if (error) throw error;
     return data[0];
   }
@@ -598,6 +600,7 @@
 
     try {
       const saved = await savePatientToDB(name, phone);
+      // توليد QR يتضمن المعرف والاسم والهاتف
       const qrContent = `PATIENT|ID:${saved.id}|${name}|${phone}`;
       const qrDataUrl = await QRCode.toDataURL(qrContent, {
         errorCorrectionLevel: 'M',
@@ -618,8 +621,15 @@
       submitBtn.disabled = false;
     } catch (err) {
       console.error(err);
-      showStatus(t.errorSave + ' : ' + (err.message || ''), 'error');
-      showToast(t.errorSave, 'error');
+      // رسالة خطأ مخصصة إذا كان الخطأ بسبب عدم وجود أعمدة التاريخ/الوقت
+      let errorMsg = t.errorSave;
+      if (err.message && (err.message.includes('appointment_date') || err.message.includes('appointment_time'))) {
+        errorMsg = t.tableError;
+      } else {
+        errorMsg += ' : ' + (err.message || '');
+      }
+      showStatus(errorMsg, 'error');
+      showToast(errorMsg, 'error');
       submitBtn.disabled = false;
       btnSpan.innerText = t.btnGen;
     }
