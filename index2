@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تسجيل المرضى | نظام العيادة</title>
+  
+  <!-- مكتبة QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* ========== نظام الألوان (مطابق لملف تسجيل الدخول) ========== */
+    :root {
+      --primary: #4f46e5;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --txt: #0f172a;
+      --brd: #e2e8f0;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
+    }
+    [data-theme="dark"] {
+      --primary: #6366f1;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --txt: #f1f5f9;
+      --brd: #334155;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', sans-serif;
+      transition: all 0.2s ease;
+    }
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: var(--card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 500px;
+      padding: 28px 24px 32px;
+      border: 1px solid var(--brd);
+    }
+    /* شريط التحكم (اللغة والثيمة) */
+    .ctrl-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .ctrl-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      border: none;
+      background: var(--bg);
+      color: var(--txt);
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: 0.2s;
+    }
+    .ctrl-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+    /* العنوان */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      color: var(--txt);
+      opacity: 0.7;
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+    /* النموذج */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    label i {
+      color: var(--primary);
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--brd);
+      border-radius: 16px;
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--txt);
+      outline: none;
+      direction: rtl;
+    }
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 18px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    /* رسائل الحالة */
+    .status {
+      padding: 12px;
+      border-radius: 14px;
+      margin: 18px 0;
+      text-align: center;
+      font-weight: 500;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.success {
+      display: block;
+      background: rgba(34,197,94,0.12);
+      color: var(--success);
+      border: 1px solid rgba(34,197,94,0.3);
+    }
+    .status.error {
+      display: block;
+      background: rgba(239,68,68,0.12);
+      color: var(--error);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+    .status.warn {
+      display: block;
+      background: rgba(245,158,11,0.12);
+      color: var(--warning);
+      border: 1px solid rgba(245,158,11,0.3);
+    }
+    /* قسم QR */
+    .qr-container {
+      display: none;
+      text-align: center;
+      margin-top: 24px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 24px;
+      border: 1px solid var(--brd);
+      animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .qr-container h3 {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      color: var(--txt);
+    }
+    .qr-container img {
+      max-width: 180px;
+      background: white;
+      padding: 8px;
+      border-radius: 16px;
+      margin: 8px 0;
+    }
+    .data-preview {
+      background: var(--card);
+      padding: 12px;
+      border-radius: 16px;
+      margin: 12px 0;
+      font-size: 0.85rem;
+      text-align: right;
+      border: 1px solid var(--brd);
+    }
+    .data-preview div {
+      margin: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      box-shadow: none;
+    }
+    .btn-outline:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    /* توست */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card);
+      color: var(--txt);
+      padding: 10px 20px;
+      border-radius: 40px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid var(--brd);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      transition: transform 0.25s;
+      white-space: nowrap;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    @media (max-width: 480px) {
+      .container { padding: 20px; }
+      .btn-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="ctrl-bar">
+    <button class="ctrl-btn" id="langToggle" title="Language">EN</button>
+    <button class="ctrl-btn" id="themeToggle" title="Theme">🌙</button>
+  </div>
+  <div class="header">
+    <h1>📝 تسجيل المرضى</h1>
+    <p>إضافة موعد جديد مع رمز QR</p>
+  </div>
+
+  <form id="patientForm">
+    <div class="form-group">
+      <label><i class="fas fa-user"></i> <span id="nameLabel">الاسم الكامل</span></label>
+      <input type="text" id="fullName" placeholder="أدخل الاسم" required>
+    </div>
+    <div class="form-group">
+      <label><i class="fas fa-phone"></i> <span id="phoneLabel">رقم الهاتف</span></label>
+      <input type="tel" id="phone" placeholder=" 9639XXXXXXXX أدخل الرقم مع النداء الوطني بهذه الصيغة" required>
+    </div>
+    <button type="submit" class="btn" id="submitBtn">
+      <i class="fas fa-qrcode"></i> <span id="btnText">توليد رمز QR</span>
+    </button>
+  </form>
+
+  <div id="statusMsg" class="status"></div>
+
+  <div id="qrSection" class="qr-container">
+    <h3><i class="fas fa-check-circle"></i> <span id="qrTitle">تم إنشاء الرمز</span></h3>
+    <img id="qrImage" src="" alt="QR Code">
+    <div class="data-preview">
+      <div><strong>👤</strong> <span id="previewName"></span></div>
+      <div><strong>📱</strong> <span id="previewPhone"></span></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="saveQrBtn"><i class="fas fa-download"></i> <span id="saveText">حفظ الصورة</span></button>
+      <button class="btn btn-outline" id="newPatientBtn"><i class="fas fa-plus-circle"></i> <span id="newText">تسجيل جديد</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastMsg"><i class="fas fa-info-circle"></i> <span id="toastText"></span></div>
+
+<script>
+  // ============================================
+  // 1. إعدادات Supabase
+  // ============================================
+  const SUPABASE_URL = 'https://ncqvzpcqotdiwjqbwlwp.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_98lfpU1zaqG-MNxkhlvg6g_KEMPMPbS';
+  let supabaseClient = null;
+  
+  // ============================================
+  // 2. الترجمة والواجهة (مطابقة لثيمة تسجيل الدخول)
+  // ============================================
+  let currentLang = localStorage.getItem('patient_lang') || 'ar';
+  let currentTheme = localStorage.getItem('patient_theme') || 'light';
+  
+  const dict = {
+    ar: {
+      nameLabel: "الاسم الكامل", namePlace: "أدخل الاسم",
+      phoneLabel: "رقم الهاتف", phonePlace: "9639XXXXXXXX أدخل الرقم مع النداء الوطني بهذ الصيغة",
+      btnGen: "توليد رمز QR", btnGenIcon: "fa-qrcode",
+      qrTitle: "تم إنشاء الرمز",
+      saveText: "حفظ الصورة", newText: "تسجيل جديد",
+      successSave: "✅ تم حفظ المريض بنجاح!",
+      errorSave: "❌ فشل الحفظ، حاول مرة أخرى",
+      fillFields: "⚠️ يرجى ملء جميع الحقول",
+      cooldownMsg: "⏱️ انتظر {time} قبل إضافة مريض آخر",
+      savedImage: "✅ تم حفظ الصورة",
+      langName: "English", themeName: "الوضع الليلي",
+      loading: "جاري الحفظ...",
+      errNetwork: "❌ مشكلة في الاتصال بقاعدة البيانات"
+    },
+    en: {
+      nameLabel: "Full Name", namePlace: "Enter name",
+      phoneLabel: "Phone Number", phonePlace: "Enter the moblie number with national call 9639XXXXXXXX",
+      btnGen: "Generate QR Code", btnGenIcon: "fa-qrcode",
+      qrTitle: "QR Code Ready",
+      saveText: "Save Image", newText: "New Patient",
+      successSave: "✅ Patient saved successfully!",
+      errorSave: "❌ Failed to save, try again",
+      fillFields: "⚠️ Please fill all fields",
+      cooldownMsg: "⏱️ Wait {time} before adding another patient",
+      savedImage: "✅ Image saved",
+      langName: "العربية", themeName: "Dark Mode",
+      loading: "Saving...",
+      errNetwork: "❌ Database connection error"
+    }
+  };
+  
+  function applyLanguage(lang) {
+    const t = dict[lang];
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('nameLabel').innerText = t.nameLabel;
+    document.getElementById('fullName').placeholder = t.namePlace;
+    document.getElementById('phoneLabel').innerText = t.phoneLabel;
+    document.getElementById('phone').placeholder = t.phonePlace;
+    document.getElementById('btnText').innerText = t.btnGen;
+    document.getElementById('qrTitle').innerText = t.qrTitle;
+    document.getElementById('saveText').innerText = t.saveText;
+    document.getElementById('newText').innerText = t.newText;
+    document.getElementById('langToggle').innerHTML = (lang === 'ar' ? 'EN' : '🇸🇦');
+    document.getElementById('langToggle').title = t.langName;
+    document.getElementById('themeToggle').title = t.themeName;
+    localStorage.setItem('patient_lang', lang);
+  }
+  
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('themeToggle');
+    btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('patient_theme', theme);
+  }
+  
+  function toggleLang() {
+    currentLang = currentLang === 'ar' ? 'en' : 'ar';
+    applyLanguage(currentLang);
+  }
+  function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(currentTheme);
+  }
+  
+  // ============================================
+  // 3. أدوات مساعدة (cooldown, toast, status)
+  // ============================================
+  const COOLDOWN_MIN = 1;   // دقيقة واحدة فقط (يمكن تعديلها)
+  let cooldownInterval = null;
+  
+  function showToast(msg, type = 'info') {
+    const toastEl = document.getElementById('toastMsg');
+    const textSpan = document.getElementById('toastText');
+    textSpan.innerText = msg;
+    toastEl.className = `toast show`;
+    setTimeout(() => toastEl.classList.remove('show'), 2800);
+  }
+  
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.className = `status ${type}`;
+    el.innerText = msg;
+    el.style.display = 'block';
+    setTimeout(() => {
+      if (el.style.display !== 'none') el.style.display = 'none';
+    }, 4000);
+  }
+  
+  function getCooldownRemaining() {
+    const last = parseInt(localStorage.getItem('patient_last_submit') || '0');
+    if (!last) return 0;
+    const elapsed = Date.now() - last;
+    const limit = COOLDOWN_MIN * 60 * 1000;
+    return Math.max(0, limit - elapsed);
+  }
+  
+  function updateCooldownUI() {
+    const remaining = getCooldownRemaining();
+    const btn = document.getElementById('submitBtn');
+    const btnSpan = document.getElementById('btnText');
+    const t = dict[currentLang];
+    if (remaining > 0) {
+      const seconds = Math.ceil(remaining / 1000);
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2,'0')}` : `0:${secs.toString().padStart(2,'0')}`;
+      btn.disabled = true;
+      btnSpan.innerText = t.cooldownMsg.replace('{time}', timeStr);
+      return true;
+    } else {
+      btn.disabled = false;
+      btnSpan.innerText = t.btnGen;
+      if (cooldownInterval) { clearInterval(cooldownInterval); cooldownInterval = null; }
+      return false;
+    }
+  }
+  
+  function startCooldown() {
+    localStorage.setItem('patient_last_submit', Date.now().toString());
+    updateCooldownUI();
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    cooldownInterval = setInterval(() => {
+      const active = updateCooldownUI();
+      if (!active && cooldownInterval) {
+        clearInterval(cooldownInterval);
+        cooldownInterval = null;
+      }
+    }, 1000);
+  }
+  
+  // ============================================
+  // 4. دالة الحفظ في Supabase (بدون حقلي التاريخ/الوقت من الواجهة)
+  //    نستخدم تاريخ ووقت افتراضيين (اليوم والوقت الحالي) لأن الجدول يتطلبهما NOT NULL
+  // ============================================
+  async function savePatientToDB(name, phone) {
+    if (!supabaseClient) throw new Error('Supabase not initialized');
+    const today = new Date().toISOString().split('T')[0];   // YYYY-MM-DD
+    const nowTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const { data, error } = await supabaseClient
+      .from('appointments')
+      .insert([{
+        patient_name: name,
+        phone: phone,
+        appointment_date: today,
+        appointment_time: nowTime,
+        status: 'pending'
+      }])
+      .select();
+    if (error) throw error;
+    return data[0];
+  }
+  
+  // ============================================
+  // 5. معالجة النموذج وتوليد QR
+  // ============================================
+  async function handleSubmit(e) {
+    e.preventDefault();
+    // تحقق من cooldown
+    if (getCooldownRemaining() > 0) {
+      const t = dict[currentLang];
+      const remaining = getCooldownRemaining();
+      const seconds = Math.ceil(remaining / 1000);
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      const timeStr = mins > 0 ? `${mins}:${secs.toString().padStart(2,'0')}` : `0:${secs.toString().padStart(2,'0')}`;
+      showStatus(t.cooldownMsg.replace('{time}', timeStr), 'warn');
+      showToast(t.cooldownMsg.replace('{time}', timeStr), 'warn');
+      return;
+    }
+    
+    const name = document.getElementById('fullName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const t = dict[currentLang];
+    
+    if (!name || !phone) {
+      showStatus(t.fillFields, 'error');
+      showToast(t.fillFields, 'error');
+      return;
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpan = document.getElementById('btnText');
+    submitBtn.disabled = true;
+    btnSpan.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.loading}`;
+    
+    try {
+      // حفظ في Supabase
+      const saved = await savePatientToDB(name, phone);
+      // توليد QR code يتضمن المعرف والبيانات
+      const qrContent = `PATIENT|ID:${saved.id}|${name}|${phone}`;
+      const qrDataUrl = await QRCode.toDataURL(qrContent, {
+        errorCorrectionLevel: 'M',
+        width: 200,
+        margin: 2
+      });
+      
+      // عرض QR والبيانات
+      document.getElementById('qrImage').src = qrDataUrl;
+      document.getElementById('previewName').innerText = name;
+      document.getElementById('previewPhone').innerText = phone;
+      document.getElementById('qrSection').style.display = 'block';
+      
+      showStatus(t.successSave, 'success');
+      showToast(t.successSave, 'success');
+      
+      // بدء فترة التبريد
+      startCooldown();
+      
+      // تغيير الزر إلى "تم" بشكل مؤقت ولكن سيتم إعادة ضبطه بواسطة cooldown
+      btnSpan.innerText = t.btnGen;
+      submitBtn.disabled = false;
+      
+      // (اختياري) إعادة تعيين النموذج بعد نجاح الحفظ؟ الأفضل تركه للمستخدم عبر "تسجيل جديد"
+    } catch (err) {
+      console.error(err);
+      showStatus(t.errorSave + ' : ' + (err.message || ''), 'error');
+      showToast(t.errorSave, 'error');
+      submitBtn.disabled = false;
+      btnSpan.innerText = t.btnGen;
+    }
+  }
+  
+  // ============================================
+  // 6. حفظ الصورة المحلية
+  // ============================================
+  document.getElementById('saveQrBtn').addEventListener('click', () => {
+    const img = document.getElementById('qrImage');
+    if (!img.src) return;
+    const link = document.createElement('a');
+    link.download = `patient_qr_${Date.now()}.png`;
+    link.href = img.src;
+    link.click();
+    showToast(dict[currentLang].savedImage, 'success');
+  });
+  
+  // ============================================
+  // 7. زر "تسجيل جديد" – إخفاء QR ومسح الحقول
+  // ============================================
+  document.getElementById('newPatientBtn').addEventListener('click', () => {
+    document.getElementById('qrSection').style.display = 'none';
+    document.getElementById('patientForm').reset();
+    // إعادة تمكين الزر إذا كان معطلاً بسبب cooldown لكنه سيبقى معطلاً حتى انتهاء الوقت
+    // لكننا نحدث واجهة التبريد
+    updateCooldownUI();
+    document.getElementById('statusMsg').style.display = 'none';
+  });
+  
+  // ============================================
+  // 8. التهيئة عند تحميل الصفحة
+  // ============================================
+  window.addEventListener('DOMContentLoaded', () => {
+    // تهيئة Supabase
+    if (typeof supabase !== 'undefined') {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('✅ Supabase ready');
+    } else {
+      console.warn('⚠️ Supabase library missing');
+      showToast('⚠️ لم يتم تحميل مكتبة Supabase، تحقق من الاتصال', 'error');
+    }
+    
+    // تطبيق الثيمة واللغة
+    applyTheme(currentTheme);
+    applyLanguage(currentLang);
+    
+    // ربط الأزرار
+    document.getElementById('langToggle').addEventListener('click', toggleLang);
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('patientForm').addEventListener('submit', handleSubmit);
+    
+    // فحص التبريد عند البداية
+    updateCooldownUI();
+  });
+</script>
+</body>
+</html>
